@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Shop all SufStitch handmade crochet products — tops, sweaters, bags & accessories.">
+  <title>Shop — SufStitch</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-container">
+    <div class="nav-logo"><a href="index.html">SufStitch</a></div>
+    <ul class="nav-menu" id="nav-menu">
+      <li><a href="index.html"    class="nav-link">Home</a></li>
+      <li><a href="products.html" class="nav-link active">Shop</a></li>
+      <li><a href="index.html#categories" class="nav-link">Categories</a></li>
+      <li><a href="index.html#about"      class="nav-link">About</a></li>
+      <li><a href="index.html#contact"    class="nav-link">Contact</a></li>
+      <li>
+        <a href="cart.html" class="nav-link" id="cart-link">
+          <i class="fas fa-shopping-bag"></i><span class="cart-count">0</span>
+        </a>
+      </li>
+    </ul>
+    <div class="nav-actions">
+      <div class="nav-search" role="search">
+        <input type="search" placeholder="Search products…" aria-label="Search">
+        <button aria-label="Search"><i class="fas fa-search"></i></button>
+      </div>
+      <button class="icon-btn dark-mode-toggle" id="darkModeToggle" aria-label="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button class="nav-toggle" id="mobile-menu" aria-label="Open menu">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main class="products-page">
+  <div class="container">
+    <div class="page-header">
+      <h1>Our Collection</h1>
+      <div class="breadcrumbs"><a href="index.html">Home</a> / <span>Shop</span></div>
+    </div>
+
+    <div class="filters-bar">
+      <label for="categoryFilter">Category</label>
+      <select class="filter-select" id="categoryFilter">
+        <option value="">All Categories</option>
+        <option value="tops">Tops</option>
+        <option value="sweaters">Sweaters &amp; Knitwear</option>
+        <option value="accessories">Accessories</option>
+        <option value="bags">Bags</option>
+      </select>
+
+      <label for="sortFilter">Sort</label>
+      <select class="filter-select" id="sortFilter">
+        <option value="">Default</option>
+        <option value="price-low">Price: Low to High</option>
+        <option value="price-high">Price: High to Low</option>
+        <option value="name">Name A–Z</option>
+      </select>
+
+      <span class="results-count" id="results-count"></span>
+    </div>
+
+    <div class="products-grid" id="products-grid"></div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <p>© 2024 SufStitch. All rights reserved.</p>
+      <p>Made with <i class="fas fa-heart" style="color:#e8738a"></i> in Pune</p>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>

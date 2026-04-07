@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart — SufStitch</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+<nav class="navbar">
+  <div class="nav-container">
+    <div class="nav-logo"><a href="index.html">SufStitch</a></div>
+    <ul class="nav-menu" id="nav-menu">
+      <li><a href="index.html"    class="nav-link">Home</a></li>
+      <li><a href="products.html" class="nav-link">Shop</a></li>
+      <li>
+        <a href="cart.html" class="nav-link active" id="cart-link">
+          <i class="fas fa-shopping-bag"></i><span class="cart-count">0</span>
+        </a>
+      </li>
+    </ul>
+    <div class="nav-actions">
+      <button class="icon-btn dark-mode-toggle" id="darkModeToggle" aria-label="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+      </button>
+      <button class="nav-toggle" id="mobile-menu" aria-label="Open menu">
+        <span class="bar"></span><span class="bar"></span><span class="bar"></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<main class="cart-page">
+  <div class="container">
+    <div class="page-header">
+      <h1>Shopping Cart</h1>
+      <div class="breadcrumbs"><a href="index.html">Home</a> / <span>Cart</span></div>
+    </div>
+
+    <div class="cart-layout">
+      <!-- Cart items -->
+      <div class="cart-items-list" id="cart-items-list"></div>
+
+      <!-- Order summary -->
+      <aside class="order-summary" aria-label="Order summary">
+        <h3>Order Summary</h3>
+        <div class="summary-row"><span>Subtotal</span><span id="cart-subtotal">₹0</span></div>
+        <div class="summary-row"><span>Shipping</span><span>₹50</span></div>
+        <div class="summary-row total"><span>Total</span><span id="cart-total">₹50</span></div>
+        <div class="free-shipping-bar" id="free-shipping-bar">Add ₹999 more for free shipping</div>
+        <a href="checkout.html" class="checkout-btn" id="checkout-btn" style="display:none">
+          <i class="fas fa-lock"></i> Proceed to Checkout
+        </a>
+        <a href="products.html" class="continue-shopping">← Continue Shopping</a>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <p>© 2024 SufStitch. All rights reserved.</p>
+    </div>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
