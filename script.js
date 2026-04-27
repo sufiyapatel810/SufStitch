@@ -1,7 +1,12 @@
-/* ============================================================
-   SufStitch — Main Application Script v3.0
-   Architecture: State → Storage → UI (one-way)
-   ============================================================ */
+import { onAuthStateChanged, auth } 
+  from './firebase.js'
+
+import {
+  db,
+  collection,
+  addDoc,
+  serverTimestamp
+} from './firebase.js'
 
 /* ── PRODUCT DATA ── */
 const PRODUCTS = [
@@ -26,6 +31,34 @@ const PRODUCTS = [
   { id:'10', name:'Granny Cardigan',           slug:'cardigan',  price:1899, image:'images/cardigan.jpg',   category:'sweaters',
     desc:'Classic granny-square cardigan with a modern cut. Cosy, colourful, and completely handmade.' },
 ];
+
+// ── this goes AFTER the PRODUCTS array ──
+// ── do not delete the array above      ──
+
+let FIREBASE_PRODUCTS = []
+
+async function loadProducts() {
+  try {
+    const snapshot = await getDocs(collection(db, 'products'))
+    FIREBASE_PRODUCTS = []
+
+    snapshot.forEach(doc => {
+      FIREBASE_PRODUCTS.push({ 
+        id: doc.id, 
+        ...doc.data() 
+      })
+    })
+
+    console.log('✅ Firebase products loaded')
+    // use Firebase products
+    return FIREBASE_PRODUCTS
+
+  } catch (error) {
+    console.log('❌ Firebase failed, using local backup')
+    // use your hardcoded PRODUCTS array as backup
+    return PRODUCTS
+  }
+}
 
 /* ── STATE ── */
 const State = {
@@ -555,15 +588,35 @@ const CheckoutPage = {
     return valid;
   },
 
-  placeOrder() {
+  async placeOrder() {
     const btn = document.querySelector('.place-order-btn');
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order...'; }
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order...';
+    }
 
-    // Simulate API call
-    setTimeout(() => {
-      const orderId = Math.random().toString(36).substr(2,8).toUpperCase();
+    try {
+      const order = {
+        customer: {
+          name:    document.getElementById('customer-name').value,
+          phone:   document.getElementById('customer-phone').value,
+          address: document.getElementById('customer-address').value,
+          city:    document.getElementById('customer-city').value,
+          pincode: document.getElementById('customer-pincode').value
+        },
+        items:     State.cart,
+        total:     State.cartSubtotal() + 50,
+        status:    'pending',
+        createdAt: serverTimestamp()
+      };
+
+      const saved = await addDoc(
+        collection(db, 'orders'),
+        order
+      );
+
       const orderEl = document.getElementById('order-id');
-      if (orderEl) orderEl.textContent = orderId;
+      if (orderEl) orderEl.textContent = saved.id;
 
       const overlay = document.getElementById('success-modal');
       if (overlay) overlay.classList.add('open');
@@ -572,26 +625,36 @@ const CheckoutPage = {
       State.cart = [];
       State.save();
       UI.updateCartCount();
-    }, 1200);
-  },
-};
+
+    } catch (error) {
+      console.error('Order failed:', error);
+      Toast.show('Order failed!', 'Please try again.', 'error');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
+      }
+    }
+  },        // ← comma because it's inside CheckoutPage object
+
+};          // ← this closes the CheckoutPage object
 
 /* ── CLOSE SUCCESS MODAL ── */
 function closeSuccessModal() {
-  document.getElementById('success-modal')?.classList.remove('open');
+  document.getElementById('success-modal')
+    ?.classList.remove('open');
   document.body.style.overflow = '';
   window.location.href = 'index.html';
 }
 
 /* ============================================================
-   ROUTER — detect page and init correct module
+   ROUTER
    ============================================================ */
 function initPage() {
   const page = location.pathname.split('/').pop() || 'index.html';
-  if (page === '' || page === 'index.html')  HomePage.init();
-  if (page === 'products.html')              ProductsPage.init();
-  if (page === 'cart.html')                  CartPage.init();
-  if (page === 'checkout.html')              CheckoutPage.init();
+  if (page === '' || page === 'index.html') HomePage.init();
+  if (page === 'products.html')             ProductsPage.init();
+  if (page === 'cart.html')                 CartPage.init();
+  if (page === 'checkout.html')             CheckoutPage.init();
 }
 
 /* ============================================================
