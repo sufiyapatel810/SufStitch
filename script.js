@@ -9,6 +9,7 @@ import {
 } from './firebase.js'
 
 import { openRazorpay } from './razorpay.js'
+
 /* ── PRODUCT DATA ── */
 const PRODUCTS = [
   { id:'1',  name:'Crochet Keychains',        slug:'keychains', price:149,  image:'images/keychain.jpg',   category:'accessories', isNew:true,
@@ -32,34 +33,6 @@ const PRODUCTS = [
   { id:'10', name:'Granny Cardigan',           slug:'cardigan',  price:1899, image:'images/cardigan.jpg',   category:'sweaters',
     desc:'Classic granny-square cardigan with a modern cut. Cosy, colourful, and completely handmade.' },
 ];
-
-// ── this goes AFTER the PRODUCTS array ──
-// ── do not delete the array above      ──
-
-let FIREBASE_PRODUCTS = []
-
-async function loadProducts() {
-  try {
-    const snapshot = await getDocs(collection(db, 'products'))
-    FIREBASE_PRODUCTS = []
-
-    snapshot.forEach(doc => {
-      FIREBASE_PRODUCTS.push({ 
-        id: doc.id, 
-        ...doc.data() 
-      })
-    })
-
-    console.log('✅ Firebase products loaded')
-    // use Firebase products
-    return FIREBASE_PRODUCTS
-
-  } catch (error) {
-    console.log('❌ Firebase failed, using local backup')
-    // use your hardcoded PRODUCTS array as backup
-    return PRODUCTS
-  }
-}
 
 /* ── STATE ── */
 const State = {
@@ -125,7 +98,6 @@ const Cart = {
     UI.updateCartCount();
     UI.refreshCardControls();
     if (item) Toast.show('Removed from cart', item.name, 'error');
-    // Re-render if on cart page
     if (document.getElementById('cart-items-list')) CartPage.render();
   },
   changeQty(id, delta) {
@@ -152,7 +124,6 @@ const Wishlist = {
       Toast.show('Added to wishlist', p.name, 'wishlist');
     }
     State.save();
-    // Refresh wishlist heart buttons
     document.querySelectorAll(`.wish-btn[data-id="${id}"]`).forEach(btn => {
       btn.classList.toggle('wishlisted', State.inWishlist(id));
       btn.title = State.inWishlist(id) ? 'Remove from wishlist' : 'Add to wishlist';
@@ -169,7 +140,9 @@ const QuickView = {
     this.overlay.id = 'quickview-modal';
     this.overlay.innerHTML = `
       <div class="modal-box">
-        <button class="modal-close" id="qv-close" aria-label="Close"><i class="fas fa-times"></i></button>
+        <button class="modal-close" id="qv-close" aria-label="Close">
+          <i class="fas fa-times"></i>
+        </button>
         <div class="quickview-layout">
           <img id="qv-img" class="quickview-img" src="" alt="">
           <div class="quickview-info">
@@ -178,14 +151,17 @@ const QuickView = {
             <div id="qv-price" class="quickview-price"></div>
             <p id="qv-desc" class="quickview-desc"></p>
             <div class="quickview-actions">
-              <button class="add-to-cart-btn" id="qv-add-btn"><i class="fas fa-shopping-bag"></i> Add to Cart</button>
-              <button class="cta-button outline" id="qv-wish-btn"><i class="fas fa-heart"></i> Wishlist</button>
+              <button class="add-to-cart-btn" id="qv-add-btn">
+                <i class="fas fa-shopping-bag"></i> Add to Cart
+              </button>
+              <button class="cta-button outline" id="qv-wish-btn">
+                <i class="fas fa-heart"></i> Wishlist
+              </button>
             </div>
           </div>
         </div>
       </div>`;
     document.body.appendChild(this.overlay);
-
     this.overlay.addEventListener('click', e => {
       if (e.target === this.overlay) this.close();
     });
@@ -197,25 +173,21 @@ const QuickView = {
     if (!p || !this.overlay) return;
     document.getElementById('qv-img').src = p.image;
     document.getElementById('qv-img').alt = p.name;
-    document.getElementById('qv-cat').textContent = p.category;
+    document.getElementById('qv-cat').textContent   = p.category;
     document.getElementById('qv-title').textContent = p.name;
     document.getElementById('qv-price').textContent = `₹${p.price}`;
-    document.getElementById('qv-desc').textContent = p.desc || '';
-
+    document.getElementById('qv-desc').textContent  = p.desc || '';
     const addBtn  = document.getElementById('qv-add-btn');
     const wishBtn = document.getElementById('qv-wish-btn');
-    // Clone to remove old listeners
     const newAdd  = addBtn.cloneNode(true);
     const newWish = wishBtn.cloneNode(true);
     addBtn.replaceWith(newAdd);
     wishBtn.replaceWith(newWish);
-
     newAdd.addEventListener('click', () => { Cart.add(id); this.close(); });
     newWish.addEventListener('click', () => Wishlist.toggle(id));
     newWish.innerHTML = State.inWishlist(id)
       ? '<i class="fas fa-heart"></i> Remove from Wishlist'
       : '<i class="far fa-heart"></i> Add to Wishlist';
-
     this.overlay.classList.add('open');
     document.body.style.overflow = 'hidden';
   },
@@ -237,7 +209,6 @@ const UI = {
       }
     });
   },
-  /** Rebuilds add-to-cart / qty row in every .cart-controls on the page */
   refreshCardControls() {
     document.querySelectorAll('.cart-controls[data-id]').forEach(el => {
       const id   = el.dataset.id;
@@ -250,11 +221,13 @@ const UI = {
             <button class="qty-btn qty-plus" data-id="${id}" aria-label="Increase">+</button>
           </div>`;
       } else {
-        el.innerHTML = `<button class="add-to-cart-btn" data-id="${id}"><i class="fas fa-shopping-bag"></i> Add to Cart</button>`;
+        el.innerHTML = `
+          <button class="add-to-cart-btn" data-id="${id}">
+            <i class="fas fa-shopping-bag"></i> Add to Cart
+          </button>`;
       }
     });
   },
-  /** Generate product card HTML */
   cardHTML(p) {
     const wished = State.inWishlist(p.id);
     return `
@@ -265,7 +238,9 @@ const UI = {
           </div>
           <div class="card-actions">
             <button class="action-btn wish-btn ${wished ? 'wishlisted' : ''}"
-              data-id="${p.id}" title="${wished ? 'Remove from wishlist' : 'Add to wishlist'}" aria-label="Wishlist">
+              data-id="${p.id}"
+              title="${wished ? 'Remove from wishlist' : 'Add to wishlist'}"
+              aria-label="Wishlist">
               <i class="fa${wished ? 's' : 'r'} fa-heart"></i>
             </button>
           </div>
@@ -280,57 +255,43 @@ const UI = {
         </div>
       </div>`;
   },
-  /** Show skeleton loading placeholders */
   showSkeletons(containerId, count = 4) {
     const el = document.getElementById(containerId);
     if (!el) return;
-    el.innerHTML = Array(count).fill('<div class="skeleton skeleton-card"></div>').join('');
+    el.innerHTML = Array(count).fill(
+      '<div class="skeleton skeleton-card"></div>'
+    ).join('');
   },
 };
 
 /* ── GLOBAL EVENT DELEGATION ── */
 function bindGlobalEvents() {
   document.addEventListener('click', e => {
-    const t = e.target.closest('[data-id], [data-qv], [data-item-id], .remove-item, .modal-close');
+    const t = e.target.closest(
+      '[data-id], [data-qv], [data-item-id], .remove-item, .modal-close'
+    );
     if (!t) return;
-
-    // Add to cart (product grid)
     if (t.matches('.add-to-cart-btn') && t.dataset.id) {
-      Cart.add(t.dataset.id);
-      return;
+      Cart.add(t.dataset.id); return;
     }
-    // Qty + (product grid)
     if (t.matches('.qty-plus') && t.dataset.id) {
-      Cart.changeQty(t.dataset.id, 1);
-      UI.refreshCardControls();
-      return;
+      Cart.changeQty(t.dataset.id, 1); UI.refreshCardControls(); return;
     }
-    // Qty − (product grid)
     if (t.matches('.qty-minus') && t.dataset.id) {
-      Cart.changeQty(t.dataset.id, -1);
-      UI.refreshCardControls();
-      return;
+      Cart.changeQty(t.dataset.id, -1); UI.refreshCardControls(); return;
     }
-    // Wishlist toggle
     if (t.matches('.wish-btn') && t.dataset.id) {
-      Wishlist.toggle(t.dataset.id);
-      return;
+      Wishlist.toggle(t.dataset.id); return;
     }
-    // Quick view
     if (t.matches('.quick-view-btn') && t.dataset.qv) {
-      QuickView.open(t.dataset.qv);
-      return;
+      QuickView.open(t.dataset.qv); return;
     }
-    // Cart page: qty buttons
     if (t.matches('.cart-qty-btn[data-item-id]')) {
       const delta = t.dataset.dir === '+' ? 1 : -1;
-      Cart.changeQty(t.dataset.itemId, delta);
-      return;
+      Cart.changeQty(t.dataset.itemId, delta); return;
     }
-    // Cart page: remove
     if (t.matches('.remove-item') && t.dataset.itemId) {
-      Cart.remove(t.dataset.itemId);
-      return;
+      Cart.remove(t.dataset.itemId); return;
     }
   });
 }
@@ -345,7 +306,6 @@ function initDarkMode() {
       btn.querySelector('i').className = document.body.classList.contains('dark')
         ? 'fas fa-sun' : 'fas fa-moon';
     });
-    // Set initial icon
     btn.querySelector('i').className = document.body.classList.contains('dark')
       ? 'fas fa-sun' : 'fas fa-moon';
   });
@@ -360,7 +320,6 @@ function initMobileMenu() {
     toggle.classList.toggle('open');
     menu.classList.toggle('open');
   });
-  // Close on nav link click
   menu.querySelectorAll('.nav-link').forEach(link => {
     link.addEventListener('click', () => {
       toggle.classList.remove('open');
@@ -397,7 +356,6 @@ function initNavSearch() {
 const HomePage = {
   init() {
     UI.showSkeletons('featured-products', 4);
-    // Simulate async load (replace with fetch('/api/products') for backend)
     setTimeout(() => {
       const featured = PRODUCTS.slice(0, 4);
       const el = document.getElementById('featured-products');
@@ -415,29 +373,23 @@ const ProductsPage = {
   filtered: [...PRODUCTS],
   init() {
     UI.showSkeletons('products-grid', 8);
-    // Pre-fill search from URL
-    const params = new URLSearchParams(location.search);
-    const q   = params.get('q')   || '';
-    const cat = params.get('category') || '';
-
+    const params  = new URLSearchParams(location.search);
+    const q       = params.get('q')        || '';
+    const cat     = params.get('category') || '';
     const catSel  = document.getElementById('categoryFilter');
     const sortSel = document.getElementById('sortFilter');
     if (catSel && cat) catSel.value = cat;
-
     if (q) {
       const searchInput = document.querySelector('.nav-search input');
       if (searchInput) searchInput.value = q;
     }
-
     setTimeout(() => {
       this.apply(q, cat, sortSel?.value || '');
     }, 350);
-
     catSel?.addEventListener('change',  () => this.apply());
     sortSel?.addEventListener('change', () => this.apply());
-
-    // Live search filter
-    document.querySelector('.nav-search input')?.addEventListener('input', () => this.apply());
+    document.querySelector('.nav-search input')
+      ?.addEventListener('input', () => this.apply());
   },
   apply(q, cat, sort) {
     const catSel  = document.getElementById('categoryFilter');
@@ -445,28 +397,27 @@ const ProductsPage = {
     q    = q    ?? document.querySelector('.nav-search input')?.value.trim().toLowerCase() ?? '';
     cat  = cat  ?? catSel?.value  ?? '';
     sort = sort ?? sortSel?.value ?? '';
-
     let list = [...PRODUCTS];
     if (q)   list = list.filter(p => p.name.toLowerCase().includes(q) || p.category.includes(q));
     if (cat) list = list.filter(p => p.category === cat);
     if (sort === 'price-low')  list.sort((a, b) => a.price - b.price);
     if (sort === 'price-high') list.sort((a, b) => b.price - a.price);
     if (sort === 'name')       list.sort((a, b) => a.name.localeCompare(b.name));
-
-    const grid = document.getElementById('products-grid');
+    const grid  = document.getElementById('products-grid');
     if (!grid) return;
-
     const count = document.getElementById('results-count');
     if (count) count.textContent = `${list.length} product${list.length !== 1 ? 's' : ''}`;
-
     if (list.length === 0) {
-      grid.innerHTML = `<div class="no-results"><i class="fas fa-search"></i><h3>No products found</h3><p>Try a different search or filter.</p></div>`;
+      grid.innerHTML = `
+        <div class="no-results">
+          <i class="fas fa-search"></i>
+          <h3>No products found</h3>
+          <p>Try a different search or filter.</p>
+        </div>`;
       return;
     }
-
     grid.innerHTML = list.map((p, i) => {
       const card = UI.cardHTML(p);
-      // Stagger animation
       return card.replace('product-card"', `product-card" style="animation-delay:${i * 60}ms"`);
     }).join('');
     UI.refreshCardControls();
@@ -481,16 +432,16 @@ const CartPage = {
   render() {
     const list = document.getElementById('cart-items-list');
     if (!list) return;
-
     const checkoutBtn = document.getElementById('checkout-btn');
-
     if (State.cart.length === 0) {
       list.innerHTML = `
         <div class="empty-cart-state">
           <i class="fas fa-shopping-bag empty-icon"></i>
           <h3>Your cart is empty</h3>
           <p>Looks like you haven't added anything yet.</p>
-          <a href="products.html" class="cta-button"><i class="fas fa-arrow-left"></i> Continue Shopping</a>
+          <a href="products.html" class="cta-button">
+            <i class="fas fa-arrow-left"></i> Continue Shopping
+          </a>
         </div>`;
       if (checkoutBtn) checkoutBtn.style.display = 'none';
     } else {
@@ -500,32 +451,30 @@ const CartPage = {
           <div class="cart-item-info">
             <h4>${item.name}</h4>
             <p class="item-price">₹${item.price.toLocaleString('en-IN')}</p>
-            <p class="item-subtotal">Subtotal: ₹${(item.price * item.qty).toLocaleString('en-IN')}</p>
+            <p class="item-subtotal">
+              Subtotal: ₹${(item.price * item.qty).toLocaleString('en-IN')}
+            </p>
           </div>
           <div class="cart-item-qty">
-            <button class="cart-qty-btn remove-item" data-item-id="${item.id}" aria-label="Remove">
-              <i class="fas fa-trash-alt" style="font-size:.75rem"></i>
-            </button>
-            <button class="cart-qty-btn" data-item-id="${item.id}" data-dir="-" aria-label="Decrease">−</button>
+            <button class="cart-qty-btn" data-item-id="${item.id}"
+                    data-dir="-" aria-label="Decrease">−</button>
             <span class="cart-qty-num">${item.qty}</span>
-            <button class="cart-qty-btn" data-item-id="${item.id}" data-dir="+" aria-label="Increase">+</button>
+            <button class="cart-qty-btn" data-item-id="${item.id}"
+                    data-dir="+" aria-label="Increase">+</button>
           </div>
-          <button class="remove-item" data-item-id="${item.id}" aria-label="Remove item" title="Remove">
+          <button class="remove-item" data-item-id="${item.id}"
+                  aria-label="Remove item" title="Remove">
             <i class="fas fa-times"></i>
           </button>
         </div>`).join('');
       if (checkoutBtn) checkoutBtn.style.display = 'block';
     }
-
-    // Update totals
-    const sub   = State.cartSubtotal();
-    const total = sub + 50;
+    const sub     = State.cartSubtotal();
+    const total   = sub + 50;
     const subEl   = document.getElementById('cart-subtotal');
     const totalEl = document.getElementById('cart-total');
     if (subEl)   subEl.textContent   = `₹${sub.toLocaleString('en-IN')}`;
     if (totalEl) totalEl.textContent = `₹${total.toLocaleString('en-IN')}`;
-
-    // Free shipping bar
     const fsBar = document.getElementById('free-shipping-bar');
     if (fsBar) {
       const remaining = 999 - sub;
@@ -542,11 +491,14 @@ const CartPage = {
    ============================================================ */
 const CheckoutPage = {
   init() {
-    // Populate items
     const itemsEl = document.getElementById('checkout-items');
     if (itemsEl) {
       if (State.cart.length === 0) {
-        itemsEl.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">Your cart is empty. <a href="products.html">Shop now</a></p>';
+        itemsEl.innerHTML = `
+          <p style="color:var(--text-muted);font-size:.88rem">
+            Your cart is empty. 
+            <a href="products.html">Shop now</a>
+          </p>`;
       } else {
         itemsEl.innerHTML = State.cart.map(i => `
           <div class="checkout-item">
@@ -559,25 +511,30 @@ const CheckoutPage = {
           </div>`).join('');
       }
     }
-
-    // Totals
-    const sub   = State.cartSubtotal();
-    const total = sub + 50;
-    ['checkout-subtotal'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = `₹${sub.toLocaleString('en-IN')}`; });
-    ['checkout-total'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = `₹${total.toLocaleString('en-IN')}`; });
+    const sub     = State.cartSubtotal();
+    const total   = sub + 50;
+    const subEl   = document.getElementById('checkout-subtotal');
+    const totalEl = document.getElementById('checkout-total');
     const finalEl = document.getElementById('final-total');
+    if (subEl)   subEl.textContent   = `₹${sub.toLocaleString('en-IN')}`;
+    if (totalEl) totalEl.textContent = `₹${total.toLocaleString('en-IN')}`;
     if (finalEl) finalEl.textContent = total.toLocaleString('en-IN');
-
-    // Form submit
-    document.getElementById('checkout-form')?.addEventListener('submit', e => {
-      e.preventDefault();
-      if (!this.validate()) return;
-      this.placeOrder();
-    });
+    document.getElementById('checkout-form')
+      ?.addEventListener('submit', e => {
+        e.preventDefault();
+        if (!this.validate()) return;
+        this.placeOrder();
+      });
   },
 
   validate() {
-    const fields = ['customer-name','customer-phone','customer-address','customer-city','customer-pincode'];
+    const fields = [
+      'customer-name',
+      'customer-phone',
+      'customer-address',
+      'customer-city',
+      'customer-pincode'
+    ];
     let valid = true;
     fields.forEach(id => {
       const el = document.getElementById(id);
@@ -589,97 +546,65 @@ const CheckoutPage = {
     return valid;
   },
 
-async placeOrder() {
-  const btn = document.getElementById('place-order-btn')
-  if (btn) {
-    btn.disabled  = true
-    btn.innerHTML = `
-      <i class="fas fa-spinner fa-spin"></i>
-      Processing...`
-  }
-
-  // ── STEP 1: Validate form first ──
-  if (!this.validate()) {
+  async placeOrder() {
+    const btn = document.getElementById('place-order-btn');
     if (btn) {
-      btn.disabled  = false
-      btn.innerHTML = `
-        <i class="fas fa-lock"></i>
-        Pay — ₹${State.cartSubtotal() + 50}`
+      btn.disabled  = true;
+      btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> Processing...`;
     }
-    return
-  }
-
-  // ── STEP 2: Collect form data ──
-  const formData = {
-    name:    document.getElementById('customer-name').value,
-    phone:   document.getElementById('customer-phone').value,
-    address: document.getElementById('customer-address').value,
-    city:    document.getElementById('customer-city').value,
-    pincode: document.getElementById('customer-pincode').value,
-    total:   State.cartSubtotal() + 50
-  }
-
-  // ── STEP 3: Open Razorpay payment popup ──
-  openRazorpay(formData, async (paymentId) => {
-    // This runs ONLY after successful payment
-
-    try {
-      // ── STEP 4: Save order to Firebase ──
-      const order = {
-        customer: {
-          name:    formData.name,
-          phone:   formData.phone,
-          address: formData.address,
-          city:    formData.city,
-          pincode: formData.pincode
-        },
-        items:     State.cart,
-        total:     formData.total,
-        paymentId: paymentId,  // Razorpay payment ID
-        status:    'paid',     // now says PAID not pending
-        createdAt: serverTimestamp()
+    const formData = {
+      name:    document.getElementById('customer-name').value,
+      phone:   document.getElementById('customer-phone').value,
+      address: document.getElementById('customer-address').value,
+      city:    document.getElementById('customer-city').value,
+      pincode: document.getElementById('customer-pincode').value,
+      total:   State.cartSubtotal() + 50
+    };
+    openRazorpay(formData, async (paymentId) => {
+      try {
+        const order = {
+          customer: {
+            name:    formData.name,
+            phone:   formData.phone,
+            address: formData.address,
+            city:    formData.city,
+            pincode: formData.pincode
+          },
+          items:     State.cart,
+          total:     formData.total,
+          paymentId: paymentId,
+          status:    'paid',
+          createdAt: serverTimestamp()
+        };
+        const saved = await addDoc(collection(db, 'orders'), order);
+        const orderEl = document.getElementById('order-id');
+        if (orderEl) orderEl.textContent = saved.id;
+        const overlay = document.getElementById('success-modal');
+        if (overlay) overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+        State.cart = [];
+        State.save();
+        UI.updateCartCount();
+      } catch (error) {
+        console.error('Error saving order:', error);
+        Toast.show(
+          'Payment done but order save failed!',
+          'Contact us with Payment ID: ' + paymentId,
+          'error'
+        );
       }
-
-      const saved = await addDoc(
-        collection(db, 'orders'),
-        order
-      )
-
-      console.log('Order saved to Firebase:', saved.id)
-
-      // ── STEP 5: Show success modal ──
-      const orderEl = document.getElementById('order-id')
-      if (orderEl) orderEl.textContent = saved.id
-
-      const overlay = document.getElementById('success-modal')
-      if (overlay) overlay.classList.add('open')
-      document.body.style.overflow = 'hidden'
-
-      // ── STEP 6: Clear cart ──
-      State.cart = []
-      State.save()
-      UI.updateCartCount()
-
-    } catch (error) {
-      console.error('Error saving order:', error)
-      Toast.show(
-        'Payment done but order save failed!',
-        'Please contact us with Payment ID: ' + paymentId,
-        'error'
-      )
+    });
+    if (btn) {
+      btn.disabled  = false;
+      btn.innerHTML = `<i class="fas fa-lock"></i> Pay — ₹${formData.total}`;
     }
-  })
+  },
 
-  // Re-enable button after opening popup
-  if (btn) {
-    btn.disabled  = false
-    btn.innerHTML = `
-      <i class="fas fa-lock"></i>
-      Pay — ₹${formData.total}`
-  }
-},
+};          // ← CheckoutPage closes here ✅
 
-/* ── CLOSE SUCCESS MODAL ── */
+/* ============================================================
+   CLOSE SUCCESS MODAL
+   ============================================================ */
 function closeSuccessModal() {
   document.getElementById('success-modal')
     ?.classList.remove('open');
@@ -712,8 +637,6 @@ document.addEventListener('DOMContentLoaded', () => {
   bindGlobalEvents();
   UI.updateCartCount();
   initPage();
-
-  // ── ADD THIS LINE ──
   document.getElementById('close-modal-btn')
     ?.addEventListener('click', closeSuccessModal);
 });
