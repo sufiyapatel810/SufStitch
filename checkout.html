@@ -17,6 +17,32 @@
       <li><a href="products.html" class="nav-link">Shop</a></li>
       <li><a href="cart.html"     class="nav-link">Cart</a></li>
       <li>
+  <li>
+    <span id="nav-user-name" 
+          style="font-size:.8rem;
+                 color:var(--brown);
+                 padding:6px 12px;
+                 font-weight:500">
+    </span>
+  </li>
+  <li>
+    <a href="login.html" 
+       class="nav-link" 
+       id="nav-login-btn">
+      <i class="fas fa-user"></i> Login
+    </a>
+  </li>
+  <li>
+    <button id="nav-logout-btn"
+            style="display:none"
+            class="nav-link"
+            onclick="logOut()">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+  </li>
+  <!-- END NEW ITEMS -->
+
+  <li>
         <a href="cart.html" class="nav-link" id="cart-link">
           <i class="fas fa-shopping-bag"></i><span class="cart-count">0</span>
         </a>
@@ -107,6 +133,6 @@
   </div>
 </div>
 
-<script src="script.js"></script>
+<script type="module" src="script.js"></script>
 </body>
 </html>
