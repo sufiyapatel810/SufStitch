@@ -8,6 +8,7 @@ import {
   serverTimestamp
 } from './firebase.js'
 
+import { openRazorpay } from './razorpay.js'
 /* ── PRODUCT DATA ── */
 const PRODUCTS = [
   { id:'1',  name:'Crochet Keychains',        slug:'keychains', price:149,  image:'images/keychain.jpg',   category:'accessories', isNew:true,
