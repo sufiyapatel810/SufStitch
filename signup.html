@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up — SufStitch</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-logo">
+        <a href="index.html">SufStitch</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="auth-page">
+    <div class="auth-card">
+
+      <div class="auth-logo">
+        <img src="images/logooo.jpg" alt="SufStitch">
+      </div>
+
+      <h2 class="auth-title">Create Account</h2>
+      <p class="auth-sub">Join the SufStitch family 🧶</p>
+
+      <form id="signup-form">
+
+        <div class="form-field">
+          <label>Full Name</label>
+          <input type="text" 
+                 id="signup-name"
+                 placeholder="Your full name" 
+                 required>
+        </div>
+
+        <div class="form-field">
+          <label>Email Address</label>
+          <input type="email" 
+                 id="signup-email"
+                 placeholder="you@email.com" 
+                 required>
+        </div>
+
+        <div class="form-field">
+          <label>Password</label>
+          <input type="password" 
+                 id="signup-password"
+                 placeholder="Min 6 characters" 
+                 required>
+        </div>
+
+        <p class="auth-error" id="auth-error"></p>
+
+        <button type="submit" 
+                class="place-order-btn" 
+                id="signup-btn">
+          <i class="fas fa-user-plus"></i> 
+          Create Account
+        </button>
+
+      </form>
+
+      <div class="auth-switch">
+        Already have an account? 
+        <a href="login.html">Sign in</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script type="module" src="auth.js"></script>
+</body>
+</html>
