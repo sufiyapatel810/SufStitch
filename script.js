@@ -589,55 +589,95 @@ const CheckoutPage = {
     return valid;
   },
 
-  async placeOrder() {
-    const btn = document.querySelector('.place-order-btn');
+async placeOrder() {
+  const btn = document.getElementById('place-order-btn')
+  if (btn) {
+    btn.disabled  = true
+    btn.innerHTML = `
+      <i class="fas fa-spinner fa-spin"></i>
+      Processing...`
+  }
+
+  // ── STEP 1: Validate form first ──
+  if (!this.validate()) {
     if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Placing Order...';
+      btn.disabled  = false
+      btn.innerHTML = `
+        <i class="fas fa-lock"></i>
+        Pay — ₹${State.cartSubtotal() + 50}`
     }
+    return
+  }
+
+  // ── STEP 2: Collect form data ──
+  const formData = {
+    name:    document.getElementById('customer-name').value,
+    phone:   document.getElementById('customer-phone').value,
+    address: document.getElementById('customer-address').value,
+    city:    document.getElementById('customer-city').value,
+    pincode: document.getElementById('customer-pincode').value,
+    total:   State.cartSubtotal() + 50
+  }
+
+  // ── STEP 3: Open Razorpay payment popup ──
+  openRazorpay(formData, async (paymentId) => {
+    // This runs ONLY after successful payment
 
     try {
+      // ── STEP 4: Save order to Firebase ──
       const order = {
         customer: {
-          name:    document.getElementById('customer-name').value,
-          phone:   document.getElementById('customer-phone').value,
-          address: document.getElementById('customer-address').value,
-          city:    document.getElementById('customer-city').value,
-          pincode: document.getElementById('customer-pincode').value
+          name:    formData.name,
+          phone:   formData.phone,
+          address: formData.address,
+          city:    formData.city,
+          pincode: formData.pincode
         },
         items:     State.cart,
-        total:     State.cartSubtotal() + 50,
-        status:    'pending',
+        total:     formData.total,
+        paymentId: paymentId,  // Razorpay payment ID
+        status:    'paid',     // now says PAID not pending
         createdAt: serverTimestamp()
-      };
+      }
 
       const saved = await addDoc(
         collection(db, 'orders'),
         order
-      );
+      )
 
-      const orderEl = document.getElementById('order-id');
-      if (orderEl) orderEl.textContent = saved.id;
+      console.log('Order saved to Firebase:', saved.id)
 
-      const overlay = document.getElementById('success-modal');
-      if (overlay) overlay.classList.add('open');
-      document.body.style.overflow = 'hidden';
+      // ── STEP 5: Show success modal ──
+      const orderEl = document.getElementById('order-id')
+      if (orderEl) orderEl.textContent = saved.id
 
-      State.cart = [];
-      State.save();
-      UI.updateCartCount();
+      const overlay = document.getElementById('success-modal')
+      if (overlay) overlay.classList.add('open')
+      document.body.style.overflow = 'hidden'
+
+      // ── STEP 6: Clear cart ──
+      State.cart = []
+      State.save()
+      UI.updateCartCount()
 
     } catch (error) {
-      console.error('Order failed:', error);
-      Toast.show('Order failed!', 'Please try again.', 'error');
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-lock"></i> Place Order';
-      }
+      console.error('Error saving order:', error)
+      Toast.show(
+        'Payment done but order save failed!',
+        'Please contact us with Payment ID: ' + paymentId,
+        'error'
+      )
     }
-  },        // ← comma because it's inside CheckoutPage object
+  })
 
-};          // ← this closes the CheckoutPage object
+  // Re-enable button after opening popup
+  if (btn) {
+    btn.disabled  = false
+    btn.innerHTML = `
+      <i class="fas fa-lock"></i>
+      Pay — ₹${formData.total}`
+  }
+},
 
 /* ── CLOSE SUCCESS MODAL ── */
 function closeSuccessModal() {
