@@ -712,4 +712,8 @@ document.addEventListener('DOMContentLoaded', () => {
   bindGlobalEvents();
   UI.updateCartCount();
   initPage();
+
+  // ── ADD THIS LINE ──
+  document.getElementById('close-modal-btn')
+    ?.addEventListener('click', closeSuccessModal);
 });
